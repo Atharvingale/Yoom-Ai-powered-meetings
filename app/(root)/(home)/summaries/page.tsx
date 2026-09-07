@@ -1,6 +1,7 @@
 import { listSummaries } from '@/lib/supabase/summaries';
 import { SummaryCard } from '@/components/SummaryCard';
 import Link from 'next/link';
+import { Sparkles, Inbox } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,26 +10,34 @@ export default async function SummariesPage() {
 
   return (
     <section className="flex size-full flex-col gap-8 text-white">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold lg:text-3xl">Meeting Summaries</h1>
-          <p className="mt-1 text-sm text-sky-2/60">
-            AI-generated summaries, action items, decisions, and transcripts.
-          </p>
+      <div className="flex flex-col gap-2 border-b border-dark-3/50 pb-6">
+        <div className="flex items-center gap-3">
+          <div className="flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-purple-600 to-indigo-600 shadow-md shadow-purple-950/50">
+            <Sparkles size={20} className="text-white" />
+          </div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+            AI Meeting Summaries
+          </h1>
         </div>
+        <p className="text-sm font-normal text-sky-200/70 max-w-2xl">
+          Browse generated meeting insights, action item assignments, key decisions, and interactive transcripts.
+        </p>
       </div>
 
       {summaries.length === 0 ? (
-        <div className="flex min-h-[300px] flex-col items-center justify-center rounded-2xl bg-dark-1/80 border border-white/10 p-8 text-center backdrop-blur-xl">
-          <h2 className="text-xl font-semibold text-white">No Summaries Yet</h2>
-          <p className="mt-2 text-sm text-sky-2/60 max-w-md">
-            Summaries are generated automatically when a meeting recording finishes processing. Check your recordings page to generate AI notes.
+        <div className="flex min-h-[300px] flex-col items-center justify-center rounded-2xl border border-dashed border-dark-3/60 bg-dark-1/40 p-8 text-center">
+          <div className="flex size-14 items-center justify-center rounded-2xl bg-dark-3/60 text-sky-200/60 mb-3">
+            <Inbox size={28} />
+          </div>
+          <h2 className="text-xl font-bold text-white">No Summaries Yet</h2>
+          <p className="mt-1 text-xs text-sky-200/60 max-w-md">
+            Summaries are generated automatically when meeting recordings are processed with AI.
           </p>
           <Link
             href="/recordings"
-            className="mt-6 rounded-xl bg-blue-1 px-6 py-2.5 text-sm font-semibold text-white shadow-glow-blue transition-all hover:bg-blue-1/90"
+            className="mt-5 inline-flex items-center gap-2 rounded-xl bg-blue-1 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-blue-900/30 hover:bg-blue-600 transition-all"
           >
-            View Recordings
+            <span>View Recordings</span>
           </Link>
         </div>
       ) : (

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import MeetingTypeList from '@/components/MeetingTypeList';
 import { useGetCalls } from '@/hooks/useGetCalls';
+import { Clock, Calendar as CalendarIcon, Sparkles } from 'lucide-react';
 
 const getGreeting = (hour: number) => {
   if (hour < 12) return 'Good morning';
@@ -40,25 +41,44 @@ const Home = () => {
     : null;
 
   return (
-    <section className="flex size-full flex-col gap-6 text-white">
-      <div className="h-[303px] w-full rounded-3xl bg-hero bg-cover shadow-card overflow-hidden relative">
-        <div className="absolute inset-0 bg-gradient-to-t from-dark-1/60 to-transparent pointer-events-none" />
-        <div className="relative flex h-full flex-col justify-between max-md:px-5 max-md:py-8 lg:p-11">
-          <h2 className="glassmorphism-v2 max-w-[283px] rounded-xl px-4 py-2 text-center text-sm font-medium animate-fade-in">
-            {nextCallTime
-              ? `Upcoming Meeting at: ${nextCallTime}`
-              : 'No Upcoming Meetings'}
-          </h2>
-          <div className="flex flex-col gap-2 animate-slide-up">
-            <p className="text-lg font-medium text-sky-1 lg:text-xl animate-fade-in">
-              {getGreeting(hour)}
-            </p>
-            <h1 className="text-4xl font-extrabold lg:text-7xl">{time}</h1>
-            <p className="text-lg font-medium text-sky-1 lg:text-2xl">{date}</p>
+    <section className="flex size-full flex-col gap-8 text-white">
+      {/* Hero Banner with Dynamic Gradient and Clock */}
+      <div className="relative h-[290px] w-full overflow-hidden rounded-3xl bg-gradient-to-r from-blue-900/80 via-purple-900/60 to-dark-1 border border-dark-3/60 p-8 shadow-2xl lg:p-10 flex flex-col justify-between">
+        {/* Decorative Grid Mesh & Glow */}
+        <div className="absolute -right-20 -top-20 size-80 rounded-full bg-blue-500/20 blur-3xl pointer-events-none" />
+        <div className="absolute right-40 -bottom-20 size-72 rounded-full bg-purple-500/20 blur-3xl pointer-events-none" />
+
+        <div className="relative flex items-center justify-between">
+          <div className="inline-flex items-center gap-2 rounded-full bg-dark-1/80 px-4 py-1.5 text-xs font-semibold text-sky-200 border border-dark-3/60 backdrop-blur-md">
+            <Sparkles size={14} className="text-purple-400 animate-pulse" />
+            <span>
+              {nextCallTime
+                ? `Upcoming Meeting at: ${nextCallTime}`
+                : 'No Upcoming Meetings'}
+            </span>
+          </div>
+
+          <div className="hidden sm:flex items-center gap-2 text-xs font-medium text-sky-200/70 bg-dark-1/60 px-3.5 py-1.5 rounded-xl border border-dark-3/40">
+            <Clock size={14} className="text-blue-400" />
+            <span>Live Workspace Clock</span>
+          </div>
+        </div>
+
+        <div className="relative flex flex-col gap-1 pt-4">
+          <p className="text-base font-semibold text-blue-400 tracking-wide">
+            {getGreeting(hour)} 👋
+          </p>
+          <h1 className="text-4xl font-black tracking-tight text-white sm:text-6xl lg:text-7xl">
+            {time}
+          </h1>
+          <div className="flex items-center gap-2 text-sm font-medium text-sky-200/80 pt-1">
+            <CalendarIcon size={16} className="text-purple-400" />
+            <span>{date}</span>
           </div>
         </div>
       </div>
 
+      {/* Main Action Grid */}
       <MeetingTypeList />
     </section>
   );

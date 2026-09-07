@@ -5,19 +5,19 @@ import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
 
 export const metadata: Metadata = {
-  title: 'YOOM',
-  description: 'A workspace for your team, powered by Stream Chat and Clerk.',
+  title: 'YOOM - AI Meeting Workspace',
+  description: 'AI-powered video conferencing and meeting intelligence platform.',
 };
 
 const RootLayout = ({ children }: Readonly<{ children: ReactNode }>) => {
   return (
-    <main className="relative">
+    <main className="relative bg-dark-2 min-h-screen text-white">
       <Navbar />
 
       <div className="flex">
         <Sidebar />
 
-        <section className="flex min-h-screen flex-1 flex-col px-6 pb-6 pt-28 max-md:pb-14 sm:px-14">
+        <section className="flex min-h-screen flex-1 flex-col px-4 pb-8 pt-20 sm:px-8 sm:pt-8 max-w-7xl mx-auto">
           <div className="w-full">{children}</div>
         </section>
       </div>

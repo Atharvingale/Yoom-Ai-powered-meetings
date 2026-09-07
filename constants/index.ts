@@ -4,11 +4,10 @@ export const sidebarLinks = [
     route: '/',
     label: 'Home',
   },
-
   {
     imgURL: '/icons/upcoming.svg',
     route: '/upcoming',
-    label: 'Upcoming',
+    label: 'Schedule',
   },
   {
     imgURL: '/icons/previous.svg',
@@ -19,6 +18,11 @@ export const sidebarLinks = [
     imgURL: '/icons/Video.svg',
     route: '/recordings',
     label: 'Recordings',
+  },
+  {
+    imgURL: '/icons/schedule.svg',
+    route: '/summaries',
+    label: 'Summaries',
   },
   {
     imgURL: '/icons/add-personal.svg',

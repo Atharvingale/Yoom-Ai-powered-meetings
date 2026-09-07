@@ -248,3 +248,49 @@ export async function deleteSummary(summaryId: string): Promise<void> {
 
   if (error) throw new Error(`Failed to delete summary: ${error.message}`);
 }
+
+export async function listSummaries(): Promise<SummaryWithMeeting[]> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { data: summaries, error } = await supabase
+      .from('meeting_summaries')
+      .select('*, meetings(title, description, starts_at, ended_at)')
+      .order('generated_at', { ascending: false });
+
+    if (error || !summaries) return [];
+
+    const fullSummaries = await Promise.all(
+      summaries.map(async (s) => {
+        const [actionRes, decisionRes, questionRes] = await Promise.all([
+          supabase.from('action_items').select('*', { count: 'exact' }).eq('meeting_id', s.meeting_id),
+          supabase.from('decisions').select('*', { count: 'exact' }).eq('meeting_id', s.meeting_id),
+          supabase.from('open_questions').select('*', { count: 'exact' }).eq('meeting_id', s.meeting_id),
+        ]);
+
+        return {
+          id: s.id,
+          meeting_id: s.meeting_id,
+          overview: s.overview,
+          model: s.model,
+          generated_at: s.generated_at,
+          meetings: s.meetings || {
+            title: 'Meeting Summary',
+            description: '',
+            starts_at: s.generated_at,
+            ended_at: s.generated_at,
+          },
+          action_items: actionRes.data || [],
+          decisions: decisionRes.data || [],
+          open_questions: questionRes.data || [],
+          action_items_count: actionRes.count || 0,
+          decisions_count: decisionRes.count || 0,
+        };
+      })
+    );
+
+    return fullSummaries;
+  } catch (err) {
+    console.warn('[Supabase Exception] listSummaries failed:', err);
+    return [];
+  }
+}

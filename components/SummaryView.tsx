@@ -8,7 +8,6 @@ import {
   Clock,
   Users,
   Play,
-  Download,
   FileText,
   CheckCircle2,
   AlertCircle,
@@ -17,9 +16,7 @@ import {
   ChevronDown,
   Sun,
   Trash2,
-  MessageSquare,
   ListFilter,
-  Check,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -40,6 +37,7 @@ export function SummaryView({ meetingId, summary, transcript }: SummaryViewProps
   const [actionItems, setActionItems] = useState(summary.action_items);
   const [activeTab, setActiveTab] = useState<'transcript' | 'key_points' | 'participants'>('transcript');
   const [transcriptSearch, setTranscriptSearch] = useState('');
+  const [selectedSpeaker, setSelectedSpeaker] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [displayCount, setDisplayCount] = useState(15);
 
@@ -89,12 +87,16 @@ export function SummaryView({ meetingId, summary, transcript }: SummaryViewProps
     }
   };
 
-  const filteredTranscript = transcript?.filter((seg) =>
-    transcriptSearch
+  const filteredTranscript = transcript?.filter((seg) => {
+    const matchesSearch = transcriptSearch
       ? seg.text.toLowerCase().includes(transcriptSearch.toLowerCase()) ||
         seg.speaker_label?.toLowerCase().includes(transcriptSearch.toLowerCase())
-      : true
-  ) || [];
+      : true;
+    const matchesSpeaker = selectedSpeaker
+      ? (seg.speaker_label || 'Speaker') === selectedSpeaker
+      : true;
+    return matchesSearch && matchesSpeaker;
+  }) || [];
 
   return (
     <div className="w-full max-w-7xl mx-auto space-y-6 pb-16">
@@ -240,9 +242,14 @@ export function SummaryView({ meetingId, summary, transcript }: SummaryViewProps
                         <div className="size-3.5 rounded-full border border-emerald-400/60 hover:bg-emerald-400/20" />
                       )}
                     </button>
-                    <span className={cn(item.status === 'done' && 'line-through text-sky-2/40')}>
+                    <span className={cn(item.status === 'done' && 'line-through text-sky-2/40', 'flex-1')}>
                       {item.task}
                     </span>
+                    {item.timestamp && (
+                      <span className="font-mono text-[10px] bg-dark-3/80 px-1.5 py-0.5 rounded text-emerald-300 border border-emerald-500/20 shrink-0">
+                        {item.timestamp}
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -271,7 +278,12 @@ export function SummaryView({ meetingId, summary, transcript }: SummaryViewProps
                 {summary.decisions.map((d) => (
                   <li key={d.id} className="flex items-start gap-2">
                     <span className="mt-1 size-1.5 rounded-full bg-purple-400 shrink-0" />
-                    <span>{d.decision}</span>
+                    <span className="flex-1">{d.decision}</span>
+                    {d.timestamp && (
+                      <span className="font-mono text-[10px] bg-dark-3/80 px-1.5 py-0.5 rounded text-purple-300 border border-purple-500/20 shrink-0">
+                        {d.timestamp}
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -300,7 +312,12 @@ export function SummaryView({ meetingId, summary, transcript }: SummaryViewProps
                 {summary.open_questions.map((q) => (
                   <li key={q.id} className="flex items-start gap-2">
                     <span className="mt-1 size-1.5 rounded-full bg-amber-400 shrink-0" />
-                    <span>{q.question}</span>
+                    <span className="flex-1">{q.question}</span>
+                    {q.timestamp && (
+                      <span className="font-mono text-[10px] bg-dark-3/80 px-1.5 py-0.5 rounded text-amber-300 border border-amber-500/20 shrink-0">
+                        {q.timestamp}
+                      </span>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -379,7 +396,42 @@ export function SummaryView({ meetingId, summary, transcript }: SummaryViewProps
 
         {/* Tab Contents */}
         {activeTab === 'transcript' && (
-          <div className="space-y-3">
+          <div className="space-y-4">
+            {/* Speaker Filter Chips */}
+            {participantNames.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 pt-1 pb-2 border-b border-white/5">
+                <span className="text-xs text-sky-2/60 font-medium mr-1">Filter by Speaker:</span>
+                <button
+                  onClick={() => setSelectedSpeaker(null)}
+                  className={cn(
+                    'px-3 py-1 rounded-full text-xs font-medium transition-all',
+                    selectedSpeaker === null
+                      ? 'bg-blue-1 text-white shadow-sm'
+                      : 'bg-dark-2 text-sky-2/70 hover:text-white border border-white/10'
+                  )}
+                >
+                  All Speakers ({transcript?.length || 0})
+                </button>
+                {participantNames.map((name, i) => {
+                  const count = transcript?.filter((s) => s.speaker_label === name).length || 0;
+                  return (
+                    <button
+                      key={name}
+                      onClick={() => setSelectedSpeaker(selectedSpeaker === name ? null : name)}
+                      className={cn(
+                        'px-3 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1.5',
+                        selectedSpeaker === name
+                          ? 'bg-purple-600 text-white shadow-sm'
+                          : 'bg-dark-2 text-sky-2/70 hover:text-white border border-white/10'
+                      )}
+                    >
+                      <span className={cn('size-2 rounded-full', getSpeakerAvatarColor(name, i).split(' ')[0].replace('/30', ''))} />
+                      <span>{name} ({count})</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
             {filteredTranscript.length === 0 ? (
               <div className="text-center py-12 text-sky-2/50 text-sm">
                 No transcript entries match your search.

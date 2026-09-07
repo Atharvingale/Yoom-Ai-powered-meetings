@@ -162,6 +162,7 @@ export class OllamaLocalProvider implements AIProvider {
             assignee: item.assignee && item.assignee !== 'null' ? String(item.assignee) : undefined,
             context: item.context ? String(item.context) : undefined,
             status: item.status === 'done' ? ('done' as const) : ('open' as const),
+            timestamp: item.timestamp ? String(item.timestamp) : undefined,
           }))
           .filter((i) => i.task.length > 0)
       : [];
@@ -172,6 +173,7 @@ export class OllamaLocalProvider implements AIProvider {
           .map((d) => ({
             decision: String(d.decision || ''),
             context: d.context ? String(d.context) : undefined,
+            timestamp: d.timestamp ? String(d.timestamp) : undefined,
           }))
           .filter((d) => d.decision.length > 0)
       : [];
@@ -182,6 +184,7 @@ export class OllamaLocalProvider implements AIProvider {
           .map((q) => ({
             question: String(q.question || ''),
             context: q.context ? String(q.context) : undefined,
+            timestamp: q.timestamp ? String(q.timestamp) : undefined,
           }))
           .filter((q) => q.question.length > 0)
       : [];

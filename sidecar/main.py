@@ -49,17 +49,71 @@ def update_job(job_id: str, status: str, progress: float, **extra: Any) -> None:
     JOBS[job_id] = {'job_id': job_id, 'status': status, 'progress': progress, **extra}
 
 
-def _transcribe_sync(model: Any, audio_path: str, language: str | None) -> tuple[list[dict[str, Any]], Any]:
+def _diarize_pyannote(audio_path: str) -> list[dict[str, Any]]:
+    hf_token = os.getenv('HF_TOKEN')
+    if not hf_token:
+        print('[Diarization] HF_TOKEN not set. Using speaker turn-taking heuristic.')
+        return []
+
+    try:
+        from pyannote.audio import Pipeline
+        import torch
+
+        print('[Diarization] Loading pyannote/speaker-diarization-3.1 pipeline...')
+        pipeline = Pipeline.from_pretrained(
+            'pyannote/speaker-diarization-3.1',
+            use_auth_token=hf_token
+        )
+        if torch.cuda.is_available():
+            pipeline.to(torch.device('cuda'))
+
+        diarization = pipeline(audio_path)
+        diarization_segments = []
+        for turn, _, speaker in diarization.itertracks(yield_label=True):
+            diarization_segments.append({
+                'start': turn.start,
+                'end': turn.end,
+                'speaker': f'Speaker {speaker.replace("SPEAKER_", "")}'
+            })
+        print(f'[Diarization] Identified {len(set(d["speaker"] for d in diarization_segments))} speakers across {len(diarization_segments)} turns.')
+        return diarization_segments
+    except Exception as err:
+        print(f'[Diarization Warning] Pyannote diarization failed: {err}')
+        return []
+
+
+def _transcribe_sync(model: Any, audio_path: str, language: str | None) -> tuple[list[dict[str, Any]], list[dict[str, Any]], Any]:
     segments, info = model.transcribe(
         audio_path,
         language=language,
         vad_filter=True,
     )
-    transcript = [
+
+    raw_transcript = [
         {'start': segment.start, 'end': segment.end, 'text': segment.text.strip()}
         for segment in segments
     ]
-    return transcript, info
+
+    diarization_segments = _diarize_pyannote(audio_path)
+
+    # If pyannote diarization is not present, apply conversational turn-taking heuristics
+    if not diarization_segments and raw_transcript:
+        current_speaker_idx = 1
+        last_end = 0.0
+        diarization_segments = []
+        for seg in raw_transcript:
+            # Silence pause > 1.8s indicates a turn shift to another speaker
+            if seg['start'] - last_end > 1.8 and last_end > 0:
+                current_speaker_idx = 2 if current_speaker_idx == 1 else 1
+            diarization_segments.append({
+                'start': seg['start'],
+                'end': seg['end'],
+                'speaker': f'Speaker {current_speaker_idx}'
+            })
+            last_end = seg['end']
+
+    return raw_transcript, diarization_segments, info
+
 
 
 async def run_transcription(job_id: str, request: TranscribeRequest) -> None:
@@ -89,19 +143,20 @@ async def run_transcription(job_id: str, request: TranscribeRequest) -> None:
                 raise device_err
 
         print(f'[Job {job_id}] Transcribing {audio_path}...')
-        transcript, info = await asyncio.to_thread(
+        transcript, diarization, info = await asyncio.to_thread(
             _transcribe_sync,
             model,
             str(audio_path),
             request.language,
         )
-        print(f'[Job {job_id}] Transcribed {len(transcript)} segments successfully.')
+        print(f'[Job {job_id}] Transcribed {len(transcript)} segments with {len(diarization)} diarization intervals successfully.')
         update_job(
             job_id,
             'completed',
             1.0,
             result={
                 'transcript': transcript,
+                'diarization': diarization,
                 'language': getattr(info, 'language', request.language or 'en'),
             },
         )

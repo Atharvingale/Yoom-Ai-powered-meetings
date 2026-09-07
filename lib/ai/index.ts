@@ -14,7 +14,15 @@ export async function generateMeetingSummary(
 ): Promise<MeetingSummaryResult> {
   const activeProvider = provider || new OllamaLocalProvider();
 
-  const fullText = segments.map((s) => (s.speaker_label ? `${s.speaker_label}: ${s.text}` : s.text)).join('\n');
+  const fullText = segments
+    .map((s) => {
+      const min = Math.floor(s.start_ms / 60000);
+      const sec = String(Math.floor((s.start_ms % 60000) / 1000)).padStart(2, '0');
+      const timeStr = `[${min.toString().padStart(2, '0')}:${sec}]`;
+      const speakerStr = s.speaker_label || 'Speaker';
+      return `${timeStr} ${speakerStr}: ${s.text}`;
+    })
+    .join('\n');
 
   try {
     const summaryResult = await activeProvider.summarize(fullText, segments);

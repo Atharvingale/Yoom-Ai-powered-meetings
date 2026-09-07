@@ -5,16 +5,19 @@ export interface ActionItemInput {
   assignee?: string;
   context?: string;
   status?: 'open' | 'done';
+  timestamp?: string;
 }
 
 export interface DecisionInput {
   decision: string;
   context?: string;
+  timestamp?: string;
 }
 
 export interface OpenQuestionInput {
   question: string;
   context?: string;
+  timestamp?: string;
 }
 
 export interface MeetingSummaryResult {

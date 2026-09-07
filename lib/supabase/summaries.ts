@@ -17,6 +17,7 @@ export interface ActionItemRecord {
   assignee: string | null;
   context: string | null;
   status: 'open' | 'done';
+  timestamp?: string | null;
   created_at: string;
 }
 
@@ -25,6 +26,7 @@ export interface DecisionRecord {
   meeting_id: string;
   decision: string;
   context: string | null;
+  timestamp?: string | null;
   created_at: string;
 }
 
@@ -33,6 +35,7 @@ export interface OpenQuestionRecord {
   meeting_id: string;
   question: string;
   context: string | null;
+  timestamp?: string | null;
   created_at: string;
 }
 
@@ -67,14 +70,17 @@ export interface SaveSummaryInput {
     assignee?: string;
     context?: string;
     status?: 'open' | 'done';
+    timestamp?: string;
   }>;
   decisions?: Array<{
     decision: string;
     context?: string;
+    timestamp?: string;
   }>;
   open_questions?: Array<{
     question: string;
     context?: string;
+    timestamp?: string;
   }>;
 }
 

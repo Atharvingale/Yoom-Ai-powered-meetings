@@ -70,6 +70,36 @@ export async function getAgentStatus(meetingId: string): Promise<PipelineStatus 
       }
     }
 
+    // Database fallback lookup if in-memory state is cleared
+    const { getTranscript } = await import('@/lib/supabase/transcripts');
+    const { getSummary } = await import('@/lib/supabase/summaries');
+
+    const [transcript, summaryRes] = await Promise.all([
+      getTranscript(meetingId),
+      getSummary(meetingId),
+    ]);
+
+    if (summaryRes?.summary) {
+      return {
+        meetingId,
+        transcription: 'success',
+        summary: 'success',
+        tts: 'success',
+        startedAt: new Date(),
+        completedAt: new Date(summaryRes.summary.generated_at),
+      };
+    }
+
+    if (transcript && transcript.status === 'ready') {
+      return {
+        meetingId,
+        transcription: 'success',
+        summary: 'running',
+        tts: 'pending',
+        startedAt: new Date(),
+      };
+    }
+
     return null;
   } catch (err) {
     console.warn('[Agent Status Warning] getAgentStatus failed:', err);
